@@ -19,4 +19,6 @@ module PSWindows::File
     result = exec(Beaker::Command.new("if exist #{path} echo true"), :acceptable_exit_codes => [0, 1])
     result.stdout =~ /true/
   end
+
+  def chmod(mod, path, recursive=false); end
 end

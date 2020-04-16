@@ -15,8 +15,24 @@ module PSWindows::Exec
     (abs ? ABS_CMD : CMD) + " /c echo #{msg}"
   end
 
-  def touch(file, abs=true)
-    (abs ? ABS_CMD : CMD) + " /c echo. 2> #{file}"
+  def touch(file, timestamp = nil)
+    require 'date'
+    time = timestamp ? DateTime.parse(timestamp) : DateTime.now
+    command0 = "Test-Path #{file} -PathType Leaf"
+    command1 = "New-Item -ItemType file #{file}"
+    command2 = "(gci #{file}).LastWriteTime = Get-Date " \
+      "-Year '#{time.year}'" \
+      "-Month '#{time.month}'" \
+      "-Day '#{time.day}'" \
+      "-Hour '#{time.hour}'" \
+      "-Minute '#{time.minute}'" \
+      "-Second '#{time.second}'"
+
+    res0 = exec(Beaker::Command.new(command0, [], cmdexe: true))
+    if res0.stdout.include? 'False'
+      exec(Beaker::Command.new(command0, [], cmdexe: true))
+    end
+    exec(Beaker::Command.new(command0, [], cmdexe: true))
   end
 
   def rm_rf path
@@ -189,6 +205,22 @@ module PSWindows::Exec
       end
     end
     env_array
+  end
+
+  # Gets the specific prepend commands as needed for this host
+  #
+  # @param [String] command Command to be executed
+  # @param [String] user_pc List of user-specified commands to prepend
+  # @param [Hash] opts optional parameters
+  # @option opts [Boolean] :cmd_exe whether cmd.exe should be used
+  #
+  # @return [String] Command string as needed for this host
+  def prepend_commands(command = '', user_pc = nil, opts = {})
+    cygwin_prefix = ''
+    cygwin_prefix = 'cmd.exe /c' if self.is_cygwin? && opts[:cmd_exe]
+    cygwin_prefix = 'powershell ' if !self.is_cygwin? && opts[:cmd_exe]
+    spacing = (user_pc && !cygwin_prefix.empty?) ? ' ' : ''
+    "#{cygwin_prefix}#{spacing}#{user_pc}"
   end
 
   # Overrides the {Windows::Exec#ssh_permit_user_environment} method,

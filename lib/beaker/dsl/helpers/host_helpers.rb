@@ -67,6 +67,7 @@ module Beaker
               if opts[:environment]
                 cmd_opts['ENV'] = opts[:environment]
               end
+              cmd_opts[:cmdexe] = true if host.hostname == 'localhost'
               command_object = Command.new(command.to_s, [], cmd_opts)
             elsif command.is_a? Command
               if opts[:environment]
