@@ -51,6 +51,16 @@ module Beaker
       end
     end
 
+    describe '#modified_at' do
+      it 'calls execute with touch and timestamp' do
+        time = '190101010000'
+        path = '/path/to/file'
+        expect( instance ).to receive(:execute).with("/bin/touch -mt #{time} #{path}").and_return(0)
+
+        instance.modified_at(path, time)
+      end
+    end
+
     describe '#environment_string' do
       let(:host) { {'pathseparator' => ':'} }
 

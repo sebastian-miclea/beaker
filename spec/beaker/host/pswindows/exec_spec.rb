@@ -50,6 +50,7 @@ module Beaker
         expect( instance.mv(origin, destination, false) ).to be === 0
       end
     end
+
     describe '#environment_string' do
       let(:host) { {'pathseparator' => ':'} }
 

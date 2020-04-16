@@ -19,6 +19,29 @@ module Windows::Exec
     (abs ? ABS_CMD : CMD) + " /c echo. 2> #{file}"
   end
 
+  # Update ModifiedDate on a file
+  # @param [String] file Path to the file
+  # @param [String] timestamp Timestamp to set
+  def modified_at(file, timestamp = nil)
+    require 'date'
+    time = timestamp ? DateTime.parse("#{timestamp}") : DateTime.now
+    test_com = "Test-Path #{file} -PathType Leaf"
+    create_file_com = "New-Item -ItemType file #{file}"
+    update_modified_com = "(gci #{file}).LastWriteTime = Get-Date " \
+      "-Year '#{time.year}'" \
+      "-Month '#{time.month}'" \
+      "-Day '#{time.day}'" \
+      "-Hour '#{time.hour}'" \
+      "-Minute '#{time.minute}'" \
+      "-Second '#{time.second}'"
+
+    test_result = exec(Beaker::Command.new(test_com, [], powershell: true))
+    if test_result.stdout.include? 'False'
+      exec(Beaker::Command.new(create_file_com, [], powershell: true))
+    end
+    exec(Beaker::Command.new(update_modified_com, [], powershell: true))
+  end
+
   def path
     'c:/windows/system32;c:/windows'
   end
@@ -95,9 +118,12 @@ module Windows::Exec
   #
   # @return [String] Command string as needed for this host
   def prepend_commands(command = '', user_pc = nil, opts = {})
-    cygwin_prefix = (self.is_cygwin? and opts[:cmd_exe]) ? 'cmd.exe /c' : ''
-    spacing = (user_pc && !cygwin_prefix.empty?) ? ' ' : ''
-    "#{cygwin_prefix}#{spacing}#{user_pc}"
+    prefix = ''
+    prefix = 'cmd.exe /c' if self.is_cygwin? and opts[:cmd_exe]
+    prefix = 'powershell' if !self.is_cygwin? && opts[:powershell]
+
+    spacing = (user_pc && !prefix.empty?) ? ' ' : ''
+    "#{prefix}#{spacing}#{user_pc}"
   end
 
   # Gets the specific append commands as needed for this host
