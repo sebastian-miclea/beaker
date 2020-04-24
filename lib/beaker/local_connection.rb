@@ -38,7 +38,7 @@ module Beaker
       end
 
       begin
-        std_out, std_err, status = Open3.capture3(envs, "sudo #{command}")
+        std_out, std_err, status = Open3.capture3(envs, "sudo sh -c \"#{command.gsub('"', '\"')}\"")
         result.stdout << std_out
         result.stderr << std_err
         result.exit_code = status.exitstatus
