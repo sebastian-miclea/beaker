@@ -38,7 +38,7 @@ module Beaker
       end
 
       begin
-        std_out, std_err, status = Open3.capture3(envs, "sudo -E sh -c \"PATH=/opt/puppetlabs/puppet/bin:/opt/puppetlabs/bin:$PATH #{command.gsub('"', '\"')}\"")
+        std_out, std_err, status = Open3.capture3(envs, command)
         puts '#'*60
         puts std_out.inspect
         puts '#'*60
