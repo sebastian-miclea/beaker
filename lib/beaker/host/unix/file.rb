@@ -54,6 +54,10 @@ module Unix::File
     execute("ls -ld #{path}")
   end
 
+  def cat(path)
+    exec("cat #{path}")
+  end
+
   # Handles any changes needed in a path for SCP
   #
   # @param [String] path File path to SCP to
