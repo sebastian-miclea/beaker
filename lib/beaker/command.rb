@@ -81,6 +81,7 @@ module Beaker
       else
         cmd_line_array = [env_string, prepend_commands, cmd, options_string, args_string, append_commands]
       end
+      binding.pry
       cmd_line_array.compact.reject( &:empty? ).join( ' ' )
     end
 
