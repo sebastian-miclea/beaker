@@ -55,7 +55,7 @@ module Unix::File
   end
 
   def cat(path)
-    exec("cat #{path}")
+    execute("cat #{path}")
   end
 
   # Handles any changes needed in a path for SCP
