@@ -35,14 +35,26 @@ module Beaker
 
     describe '#tmpdir' do
       let(:tmp_path) { 'C:\\tmpdir\\' }
+      let(:fake_command) { Beaker::Command.new('command1') }
+
       before do
         allow(instance).to receive(:execute).with(anything)
+
       end
+
       context 'with dirname sent' do
         let(:name) { 'my_dir' }
         it 'returns the path to my_dir' do
-          expect(instance).to receive(:execute).with('[System.IO.Path]::GetTempPath()').and_return(double(stdout: tmp_path))
-          expect(instance).to receive(:execute).with("New-Item -Path '#{tmp_path}' -Force -Name '#{name}' -ItemType 'directory'")
+          expect(Beaker::Command).to receive(:new).
+            with('powershell.exe', array_including('-Command [System.IO.Path]::GetTempPath()')).
+            and_return(fake_command)
+          expect(instance).to receive(:exec).with(instance_of(Beaker::Command)).and_return(double(stdout: tmp_path))
+
+          expect(Beaker::Command).to receive(:new).
+            with('powershell.exe', array_including("-Command New-Item -Path '#{tmp_path}' -Force -Name '#{name}' -ItemType 'directory'")).
+            and_return(fake_command)
+          expect(instance).to receive(:exec).with(instance_of(Beaker::Command)).and_return(true)
+
           expect(instance.tmpdir(name)).to eq(File.join(tmp_path, name))
         end
       end
@@ -50,13 +62,24 @@ module Beaker
       context 'without dirname sent' do
         let(:name) { '' }
         let(:random_dir) { 'dirname' }
-        before do
-          allow(instance).to receive(:execute).with('[System.IO.Path]::GetRandomFileName()').and_return(double(stdout: random_dir))
-        end
+
         it 'returns the path to random name dir' do
-          expect(instance).to receive(:execute).with('[System.IO.Path]::GetTempPath()').and_return(double(stdout: tmp_path))
-          expect(instance).to receive(:execute).with("New-Item -Path '#{tmp_path}' -Force -Name '#{random_dir}' -ItemType 'directory'")
-          expect(instance.tmpdir(name)).to eq(File.join(tmp_path, random_dir))
+          expect(Beaker::Command).to receive(:new).
+            with('powershell.exe', array_including('-Command [System.IO.Path]::GetTempPath()')).
+            and_return(fake_command)
+          expect(instance).to receive(:exec).with(instance_of(Beaker::Command)).and_return(double(stdout: tmp_path))
+
+          expect(Beaker::Command).to receive(:new).
+            with('powershell.exe', array_including('-Command [System.IO.Path]::GetRandomFileName()')).
+            and_return(fake_command)
+          expect(instance).to receive(:exec).with(instance_of(Beaker::Command)).and_return(double(stdout: random_dir))
+
+          expect(Beaker::Command).to receive(:new).
+            with('powershell.exe', array_including("-Command New-Item -Path '#{tmp_path}' -Force -Name '#{random_dir}' -ItemType 'directory'")).
+            and_return(fake_command)
+          expect(instance).to receive(:exec).with(instance_of(Beaker::Command)).and_return(true)
+
+          expect(instance.tmpdir).to eq(File.join(tmp_path, random_dir))
         end
       end
     end
